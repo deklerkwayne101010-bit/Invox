@@ -320,7 +320,7 @@ export default function CommunityPage() {
           <h3 className="text-lg font-semibold text-blue-900 mb-4">Community Guidelines</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold text-blue-900 mb-2">✅ Do's</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">✅ Do&apos;s</h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Share your business experiences and lessons learned</li>
                 <li>• Ask thoughtful questions about invoicing and business</li>
@@ -329,7 +329,7 @@ export default function CommunityPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-blue-900 mb-2">❌ Don'ts</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">❌ Don&apos;ts</h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Share confidential client information</li>
                 <li>• Post spam or promotional content</li>
