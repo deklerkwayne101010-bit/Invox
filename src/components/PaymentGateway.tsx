@@ -7,7 +7,7 @@ interface PaymentGatewayProps {
   amount: number;
   currency: string;
   invoiceId: string;
-  onPaymentSuccess?: (paymentData: any) => void;
+  onPaymentSuccess?: (paymentData: { id: string; amount: number; currency: string; status: string }) => void;
 }
 
 export default function PaymentGateway({ amount, currency, invoiceId, onPaymentSuccess }: PaymentGatewayProps) {
@@ -44,7 +44,7 @@ export default function PaymentGateway({ amount, currency, invoiceId, onPaymentS
         setStatus('error');
         setMessage('Failed to create payment session');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
       setMessage('Network error. Please try again.');
     } finally {
@@ -79,7 +79,7 @@ export default function PaymentGateway({ amount, currency, invoiceId, onPaymentS
         setStatus('error');
         setMessage('Failed to create PayPal payment');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
       setMessage('Network error. Please try again.');
     } finally {

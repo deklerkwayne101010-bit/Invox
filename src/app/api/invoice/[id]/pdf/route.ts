@@ -14,8 +14,8 @@ interface InvoiceData {
   client_email?: string;
   items: InvoiceItem[];
   total: number;
-  created_at: any;
-  due_date: any;
+  created_at: Date | { toDate: () => Date };
+  due_date: Date | { toDate: () => Date };
 }
 
 export async function GET(
@@ -52,8 +52,20 @@ export async function GET(
 
     // Invoice details
     pdfDoc.text(`Invoice ID: ${invoiceId}`, 120, 50);
-    pdfDoc.text(`Date: ${invoice.created_at?.toDate()?.toLocaleDateString() || 'N/A'}`, 120, 60);
-    pdfDoc.text(`Due Date: ${invoice.due_date?.toDate()?.toLocaleDateString() || 'N/A'}`, 120, 70);
+    const createdDate = invoice.created_at && typeof invoice.created_at === 'object' && 'toDate' in invoice.created_at
+      ? invoice.created_at.toDate().toLocaleDateString()
+      : invoice.created_at instanceof Date
+      ? invoice.created_at.toLocaleDateString()
+      : 'N/A';
+
+    const dueDate = invoice.due_date && typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date
+      ? invoice.due_date.toDate().toLocaleDateString()
+      : invoice.due_date instanceof Date
+      ? invoice.due_date.toLocaleDateString()
+      : 'N/A';
+
+    pdfDoc.text(`Date: ${createdDate}`, 120, 60);
+    pdfDoc.text(`Due Date: ${dueDate}`, 120, 70);
 
     // Client info
     pdfDoc.text('Bill To:', 20, 100);

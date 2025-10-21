@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
     const invoicesSnapshot = await getDocs(invoicesQuery);
     const invoices = invoicesSnapshot.docs.map(doc => ({
       id: doc.id,
+      created_at: doc.data().created_at || '',
+      total: doc.data().total || 0,
+      client_name: doc.data().client_name || '',
       ...doc.data()
     }));
 
@@ -50,6 +53,9 @@ export async function GET(request: NextRequest) {
     const expensesSnapshot = await getDocs(expensesQuery);
     const expenses = expensesSnapshot.docs.map(doc => ({
       id: doc.id,
+      date: doc.data().date || '',
+      amount: doc.data().amount || 0,
+      category: doc.data().category || '',
       ...doc.data()
     }));
 
@@ -92,7 +98,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function calculateOverviewAnalytics(invoices: any[], expenses: any[], period: string) {
+function calculateOverviewAnalytics(invoices: { id: string; created_at: string; total?: number; client_name: string }[], expenses: { id: string; date: string; amount?: number; category: string }[], period: string) {
   const now = new Date();
   const monthsBack = period === '3m' ? 3 : period === '6m' ? 6 : period === '1y' ? 12 : 24;
 
@@ -127,7 +133,7 @@ function calculateOverviewAnalytics(invoices: any[], expenses: any[], period: st
 
   // Expense categories
   const expenseCategories = expenses.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    acc[expense.category] = (acc[expense.category] || 0) + (expense.amount || 0);
     return acc;
   }, {} as Record<string, number>);
 
@@ -149,7 +155,7 @@ function calculateOverviewAnalytics(invoices: any[], expenses: any[], period: st
   };
 }
 
-function calculateProfitLossAnalytics(invoices: any[], expenses: any[], period: string) {
+function calculateProfitLossAnalytics(invoices: { id: string; created_at: string; total?: number; client_name: string }[], expenses: { id: string; date: string; amount?: number; category: string }[], period: string) {
   const data = calculateOverviewAnalytics(invoices, expenses, period);
   return {
     profitLossStatement: data.monthlyData.map(d => ({
@@ -163,7 +169,7 @@ function calculateProfitLossAnalytics(invoices: any[], expenses: any[], period: 
   };
 }
 
-function calculateCashFlowAnalytics(invoices: any[], expenses: any[], period: string) {
+function calculateCashFlowAnalytics(invoices: { id: string; created_at: string; total?: number; client_name: string }[], expenses: { id: string; date: string; amount?: number; category: string }[], period: string) {
   const data = calculateOverviewAnalytics(invoices, expenses, period);
   return {
     cashFlow: data.monthlyData.map(d => ({
@@ -180,7 +186,7 @@ function calculateCashFlowAnalytics(invoices: any[], expenses: any[], period: st
   };
 }
 
-function calculateTaxAnalytics(invoices: any[], expenses: any[]) {
+function calculateTaxAnalytics(invoices: { id: string; created_at: string; total?: number; client_name: string }[], expenses: { id: string; date: string; amount?: number; category: string }[]) {
   const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
   const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const profit = totalRevenue - totalExpenses;
@@ -212,7 +218,7 @@ function calculateTaxAnalytics(invoices: any[], expenses: any[]) {
   };
 }
 
-function calculateForecastAnalytics(invoices: any[], expenses: any[]) {
+function calculateForecastAnalytics(invoices: { id: string; created_at: string; total?: number; client_name: string }[], expenses: { id: string; date: string; amount?: number; category: string }[]) {
   if (invoices.length < 3) {
     return { forecast: [], message: 'Need at least 3 months of data for forecasting' };
   }
@@ -221,7 +227,7 @@ function calculateForecastAnalytics(invoices: any[], expenses: any[]) {
   const monthlyRevenue = invoices.reduce((acc, inv) => {
     const date = new Date(inv.created_at);
     const key = `${date.getFullYear()}-${date.getMonth()}`;
-    acc[key] = (acc[key] || 0) + inv.total;
+    acc[key] = (acc[key] || 0) + (inv.total || 0);
     return acc;
   }, {} as Record<string, number>);
 
@@ -237,10 +243,10 @@ function calculateForecastAnalytics(invoices: any[], expenses: any[]) {
   const recentData = revenueData.slice(-6); // Use last 6 months
   const slope = recentData.reduce((acc, item, index) => {
     if (index === 0) return acc;
-    return acc + ((item.value as number) - (recentData[0].value as number)) / index;
+    return acc + (((item.value as number) || 0) - ((recentData[0].value as number) || 0)) / index;
   }, 0) / (recentData.length - 1);
 
-  const lastValue = recentData[recentData.length - 1].value as number;
+  const lastValue = recentData[recentData.length - 1].value as number || 0;
 
   // Generate 6-month forecast
   const forecast = Array.from({ length: 6 }, (_, i) => {

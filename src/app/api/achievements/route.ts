@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface Achievement {
@@ -240,7 +240,7 @@ export async function GET(request: NextRequest) {
       if (!alreadyUnlocked && template.condition(mockStats)) {
         newAchievements.push({
           userId,
-          type: template.type as any,
+          type: template.type as Achievement['type'],
           title: template.title,
           description: template.description,
           icon: template.icon,

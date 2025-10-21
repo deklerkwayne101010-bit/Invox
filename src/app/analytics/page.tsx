@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, BarChart3, PieChart as PieChartIcon, Calendar, Download, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, BarChart3, Calendar, Download, Filter } from "lucide-react";
 
 interface Invoice {
   id: string;
@@ -30,7 +30,7 @@ interface TaxCalculation {
 interface ForecastData {
   month: string;
   predicted: number;
-  actual: number;
+  actual?: number;
   confidence: number;
 }
 
@@ -93,7 +93,7 @@ export default function Analytics() {
   };
 
   // Generate forecast data using simple linear regression
-  const generateForecast = (data: any[], months: number = 6): ForecastData[] => {
+  const generateForecast = (data: { value: number }[], months: number = 6): ForecastData[] => {
     if (data.length < 3) return [];
 
     const recentData = data.slice(-12); // Use last 12 months for trend
@@ -155,7 +155,7 @@ export default function Analytics() {
   const totalRevenue = analyticsData.reduce((sum, d) => sum + d.revenue, 0);
   const totalExpenses = analyticsData.reduce((sum, d) => sum + d.expenses, 0);
   const totalProfit = totalRevenue - totalExpenses;
-  const avgMonthlyRevenue = totalRevenue / analyticsData.length;
+  const avgMonthlyRevenue = analyticsData.length > 0 ? totalRevenue / analyticsData.length : 0;
   const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   // Growth rates

@@ -21,7 +21,7 @@ export default function PWAInstallPrompt() {
   useEffect(() => {
     // Check if already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isInWebAppiOS = (window.navigator as any).standalone === true;
+    const isInWebAppiOS = (window.navigator as { standalone?: boolean }).standalone === true;
     setIsStandalone(isStandalone || isInWebAppiOS);
 
     // Check if iOS
@@ -108,7 +108,7 @@ export default function PWAInstallPrompt() {
         {isIOS ? (
           <div className="space-y-3">
             <p className="text-sm text-gray-700">
-              Tap the share button <span className="inline-block w-5 h-5 bg-gray-200 rounded text-xs text-center leading-5">⌃</span> and select "Add to Home Screen"
+              Tap the share button <span className="inline-block w-5 h-5 bg-gray-200 rounded text-xs text-center leading-5">&uarr;</span> and select &ldquo;Add to Home Screen&rdquo;
             </p>
             <button
               onClick={handleIOSInstall}

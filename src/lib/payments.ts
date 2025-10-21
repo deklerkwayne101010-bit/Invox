@@ -140,7 +140,7 @@ export async function createPayPalPayment(amount: number, currency: string, invo
       }],
     };
 
-    paypal.payment.create(create_payment_json, (error: any, payment: any) => {
+    paypal.payment.create(create_payment_json, (error: unknown, payment: any) => {
       if (error) {
         console.error('PayPal payment creation failed:', error);
         reject(new Error('Failed to create PayPal payment'));
@@ -165,7 +165,7 @@ export async function executePayPalPayment(paymentId: string, payerId: string): 
       payer_id: payerId,
     };
 
-    paypal.payment.execute(paymentId, execute_payment_json, (error: any, payment: any) => {
+    paypal.payment.execute(paymentId, execute_payment_json, (error: unknown, payment: any) => {
       if (error) {
         console.error('PayPal payment execution failed:', error);
         reject(new Error('Failed to execute PayPal payment'));

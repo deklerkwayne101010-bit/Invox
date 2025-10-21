@@ -45,7 +45,7 @@ const rarityIcons = {
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [lockedAchievements, setLockedAchievements] = useState<any[]>([]);
+  const [lockedAchievements, setLockedAchievements] = useState<Achievement[]>([]);
   const [stats, setStats] = useState<UserStats>({
     totalInvoices: 0,
     totalRevenue: 0,
@@ -234,7 +234,8 @@ export default function AchievementsPage() {
                 const rarity = achievement.rarity as RarityType;
                 const RarityIcon = rarityIcons[rarity];
                 const progress = achievement.progress || 0;
-                const percentage = Math.min((progress / achievement.target) * 100, 100);
+                const target = achievement.target || 1;
+                const percentage = Math.min((progress / target) * 100, 100);
 
                 return (
                   <div key={index} className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-6 opacity-75">

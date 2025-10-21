@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CreditCard, TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign, Calendar, Filter } from 'lucide-react';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface Invoice {
@@ -11,8 +11,8 @@ interface Invoice {
   client_name: string;
   total: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue';
-  created_at: any;
-  due_date: any;
+  created_at: Date | { toDate: () => Date };
+  due_date: Date | { toDate: () => Date };
 }
 
 interface PaymentStats {
@@ -120,7 +120,12 @@ export default function PaymentsPage() {
     if (filter === 'pending') return invoice.status === 'sent';
     if (filter === 'overdue') {
       const now = new Date();
-      return invoice.due_date && invoice.due_date.toDate() < now && invoice.status !== 'paid';
+      const dueDate = invoice.due_date && typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date
+        ? invoice.due_date.toDate()
+        : invoice.due_date instanceof Date
+        ? invoice.due_date
+        : null;
+      return dueDate && dueDate < now && invoice.status !== 'paid';
     }
     return true;
   });
@@ -252,8 +257,16 @@ export default function PaymentsPage() {
           {filteredInvoices.length > 0 ? (
             <div className="divide-y divide-gray-200">
               {filteredInvoices.map((invoice) => {
-                const dueDate = invoice.due_date?.toDate();
-                const createdDate = invoice.created_at?.toDate();
+                const dueDate = invoice.due_date && typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date
+                  ? invoice.due_date.toDate()
+                  : invoice.due_date instanceof Date
+                  ? invoice.due_date
+                  : null;
+                const createdDate = invoice.created_at && typeof invoice.created_at === 'object' && 'toDate' in invoice.created_at
+                  ? invoice.created_at.toDate()
+                  : invoice.created_at instanceof Date
+                  ? invoice.created_at
+                  : null;
                 const isOverdue = dueDate && dueDate < new Date() && invoice.status !== 'paid';
 
                 return (
