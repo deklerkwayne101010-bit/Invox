@@ -179,7 +179,7 @@ export default function FeedbackWidget() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      We'll only use this to follow up on your feedback
+                      We&apos;ll only use this to follow up on your feedback
                     </p>
                   </div>
 
