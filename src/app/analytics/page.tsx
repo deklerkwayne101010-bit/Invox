@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, BarChart3, Calendar, Download, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, BarChart3, Download } from "lucide-react";
 
 interface Invoice {
   id: string;
@@ -49,7 +49,7 @@ export default function Analytics() {
         const analyticsRes = await fetch(`/api/analytics?period=${selectedPeriod}&type=${selectedReport}`);
 
         if (analyticsRes.ok) {
-          const analyticsData = await analyticsRes.json();
+          await analyticsRes.json();
           // Transform API data to match component expectations
           setInvoices([]); // We'll use the analytics data directly
           setExpenses([]);
@@ -155,7 +155,7 @@ export default function Analytics() {
   const totalRevenue = analyticsData.reduce((sum, d) => sum + d.revenue, 0);
   const totalExpenses = analyticsData.reduce((sum, d) => sum + d.expenses, 0);
   const totalProfit = totalRevenue - totalExpenses;
-  const avgMonthlyRevenue = analyticsData.length > 0 ? totalRevenue / analyticsData.length : 0;
+  // const avgMonthlyRevenue = analyticsData.length > 0 ? totalRevenue / analyticsData.length : 0;
   const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   // Growth rates
@@ -216,7 +216,7 @@ export default function Analytics() {
             <div className="flex gap-4">
               <select
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as any)}
+                onChange={(e) => setSelectedPeriod(e.target.value as '3m' | '6m' | '1y' | 'all')}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="3m">Last 3 Months</option>
@@ -242,7 +242,7 @@ export default function Analytics() {
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setSelectedReport(id as any)}
+                onClick={() => setSelectedReport(id as 'overview' | 'profit-loss' | 'cash-flow' | 'tax' | 'forecast')}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                   selectedReport === id
                     ? 'bg-primary text-white'
