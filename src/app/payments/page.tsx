@@ -100,7 +100,7 @@ export default function PaymentsPage() {
 
   const getStatusColor = (status: string, dueDate?: Date | { toDate: () => Date }) => {
     const now = new Date();
-    const isOverdue = dueDate && dueDate.toDate() < now && status !== 'paid';
+    const isOverdue = dueDate && (dueDate instanceof Date ? dueDate : dueDate.toDate()) < now && status !== 'paid';
 
     if (isOverdue) return 'text-red-600 bg-red-100';
     if (status === 'paid') return 'text-green-600 bg-green-100';
@@ -232,7 +232,7 @@ export default function PaymentsPage() {
                 ].map(({ key, label, count }) => (
                   <button
                     key={key}
-                    onClick={() => setFilter(key as any)}
+                    onClick={() => setFilter(key as 'all' | 'pending' | 'paid' | 'overdue')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filter === key
                         ? 'bg-primary text-white'
