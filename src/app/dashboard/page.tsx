@@ -175,7 +175,7 @@ export default function Dashboard() {
                     <span className="text-2xl">🎉</span>
                     <div>
                       <p className="text-lg font-semibold">Milestone Achieved!</p>
-                      <p className="text-sm opacity-90">You've reached a new invoice milestone. Share your success on social media!</p>
+                      <p className="text-sm opacity-90">You&apos;ve reached a new invoice milestone. Share your success on social media!</p>
                     </div>
                   </div>
                   <Link
