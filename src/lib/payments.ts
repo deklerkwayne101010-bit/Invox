@@ -145,13 +145,13 @@ export async function createPayPalPayment(amount: number, currency: string, invo
         console.error('PayPal payment creation failed:', error);
         reject(new Error('Failed to create PayPal payment'));
       } else {
-        const approvalUrl = payment.links.find((link: any) => link.rel === 'approval_url')?.href;
+        const approvalUrl = (payment.links as any[]).find((link: any) => link.rel === 'approval_url')?.href;
 
         resolve({
-          id: payment.id,
-          amount: parseFloat(payment.transactions[0].amount.total),
-          currency: payment.transactions[0].amount.currency,
-          status: payment.state,
+          id: payment.id as string,
+          amount: parseFloat((payment.transactions as any[])[0].amount.total),
+          currency: (payment.transactions as any[])[0].amount.currency,
+          status: payment.state as string,
           approval_url: approvalUrl,
         });
       }
@@ -171,10 +171,10 @@ export async function executePayPalPayment(paymentId: string, payerId: string): 
         reject(new Error('Failed to execute PayPal payment'));
       } else {
         resolve({
-          id: payment.id,
-          amount: parseFloat(payment.transactions[0].amount.total),
-          currency: payment.transactions[0].amount.currency,
-          status: payment.state,
+          id: payment.id as string,
+          amount: parseFloat((payment.transactions as any[])[0].amount.total),
+          currency: (payment.transactions as any[])[0].amount.currency,
+          status: payment.state as string,
         });
       }
     });

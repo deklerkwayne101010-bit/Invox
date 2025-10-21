@@ -61,7 +61,11 @@ export default function PaymentsPage() {
       let overdueCount = 0;
 
       invoicesData.forEach(invoice => {
-        const dueDate = invoice.due_date?.toDate();
+        const dueDate = invoice.due_date && typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date
+          ? invoice.due_date.toDate()
+          : invoice.due_date instanceof Date
+          ? invoice.due_date
+          : null;
         const isOverdue = dueDate && dueDate < now && invoice.status !== 'paid';
 
         if (invoice.status === 'paid') {
@@ -94,7 +98,7 @@ export default function PaymentsPage() {
     }
   };
 
-  const getStatusColor = (status: string, dueDate?: any) => {
+  const getStatusColor = (status: string, dueDate?: Date | { toDate: () => Date }) => {
     const now = new Date();
     const isOverdue = dueDate && dueDate.toDate() < now && status !== 'paid';
 
@@ -104,9 +108,9 @@ export default function PaymentsPage() {
     return 'text-gray-600 bg-gray-100';
   };
 
-  const getStatusIcon = (status: string, dueDate?: any) => {
+  const getStatusIcon = (status: string, dueDate?: Date | { toDate: () => Date }) => {
     const now = new Date();
-    const isOverdue = dueDate && dueDate.toDate() < now && status !== 'paid';
+    const isOverdue = dueDate && (dueDate instanceof Date ? dueDate : dueDate.toDate()) < now && status !== 'paid';
 
     if (isOverdue) return <AlertTriangle size={16} />;
     if (status === 'paid') return <CheckCircle size={16} />;
