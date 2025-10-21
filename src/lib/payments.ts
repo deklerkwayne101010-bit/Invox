@@ -1,14 +1,7 @@
 import Stripe from 'stripe';
-import paypal from 'paypal-rest-sdk';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover',
-});
-
-paypal.configure({
-  mode: process.env.PAYPAL_MODE as 'sandbox' | 'live',
-  client_id: process.env.PAYPAL_CLIENT_ID!,
-  client_secret: process.env.PAYPAL_CLIENT_SECRET!,
 });
 
 export interface PaymentIntent {
@@ -17,14 +10,6 @@ export interface PaymentIntent {
   currency: string;
   status: string;
   client_secret?: string;
-}
-
-export interface PayPalPayment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  approval_url?: string;
 }
 
 // Stripe Functions
@@ -110,79 +95,6 @@ export async function createStripeCheckoutSession(
   }
 }
 
-// PayPal Functions
-export async function createPayPalPayment(amount: number, currency: string, invoiceId: string, returnUrl: string, cancelUrl: string): Promise<PayPalPayment> {
-  return new Promise((resolve, reject) => {
-    const create_payment_json = {
-      intent: 'sale',
-      payer: {
-        payment_method: 'paypal',
-      },
-      redirect_urls: {
-        return_url: returnUrl,
-        cancel_url: cancelUrl,
-      },
-      transactions: [{
-        item_list: {
-          items: [{
-            name: `Invoice #${invoiceId}`,
-            sku: invoiceId,
-            price: amount.toFixed(2),
-            currency: currency,
-            quantity: 1,
-          }],
-        },
-        amount: {
-          currency: currency,
-          total: amount.toFixed(2),
-        },
-        description: `Payment for Invoice #${invoiceId}`,
-      }],
-    };
-
-    paypal.payment.create(create_payment_json, (error: unknown, payment: any) => {
-      if (error) {
-        console.error('PayPal payment creation failed:', error);
-        reject(new Error('Failed to create PayPal payment'));
-      } else {
-        const links = payment.links as Array<{ rel: string; href: string }>;
-        const approvalUrl = links?.find((link: { rel: string; href: string }) => link.rel === 'approval_url')?.href;
-
-        const transactions = payment.transactions as Array<{ amount: { total: string; currency: string } }>;
-
-        resolve({
-          id: payment.id as string,
-          amount: parseFloat(transactions[0].amount.total),
-          currency: transactions[0].amount.currency,
-          status: payment.state as string,
-          approval_url: approvalUrl,
-        });
-      }
-    });
-  });
-}
-
-export async function executePayPalPayment(paymentId: string, payerId: string): Promise<PayPalPayment> {
-  return new Promise((resolve, reject) => {
-    const execute_payment_json = {
-      payer_id: payerId,
-    };
-
-    paypal.payment.execute(paymentId, execute_payment_json, (error: unknown, payment: any) => {
-      if (error) {
-        console.error('PayPal payment execution failed:', error);
-        reject(new Error('Failed to execute PayPal payment'));
-      } else {
-        resolve({
-          id: payment.id as string,
-          amount: parseFloat((payment.transactions as any[])[0].amount.total),
-          currency: (payment.transactions as any[])[0].amount.currency,
-          status: payment.state as string,
-        });
-      }
-    });
-  });
-}
 
 // Webhook verification
 export async function verifyStripeWebhook(rawBody: Buffer, signature: string): Promise<boolean> {
