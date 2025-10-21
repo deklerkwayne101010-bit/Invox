@@ -153,7 +153,7 @@ export default function Dashboard() {
             <Rocket className="text-primary" size={40} />
             Smart Invoice Dashboard
           </h1>
-          <p className="text-gray-600 text-lg">Your business is thriving! Here's what's happening:</p>
+          <p className="text-gray-600 text-lg">Your business is thriving! Here&apos;s what&apos;s happening:</p>
         </header>
 
         {/* Motivational Message */}
