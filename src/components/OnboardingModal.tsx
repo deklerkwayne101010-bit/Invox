@@ -24,7 +24,7 @@ export default function OnboardingModal({ isOpen, onClose }: { isOpen: boolean; 
             <span className="text-3xl">🚀</span>
           </div>
           <p className="text-gray-600">
-            Invox is designed specifically for entrepreneurs like you. We'll show you how to create professional invoices, track payments, and grow your business.
+            Invox is designed specifically for entrepreneurs like you. We&apos;ll show you how to create professional invoices, track payments, and grow your business.
           </p>
         </div>
       )
