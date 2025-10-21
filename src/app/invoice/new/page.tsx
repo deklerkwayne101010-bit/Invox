@@ -2,26 +2,36 @@
 
 import { useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, MicOff, Save, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, Save, ArrowLeft, Plus, Trash2, FileText, User, Calendar, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  price: number;
+}
+
 interface ParsedInvoice {
   clientName: string;
-  description: string;
-  amount: string;
+  clientEmail: string;
+  items: InvoiceItem[];
+  total: number;
   date: string;
   dueDate: string;
+  notes: string;
 }
 
 export default function NewInvoicePage() {
   const [parsedInvoice, setParsedInvoice] = useState<ParsedInvoice>({
     clientName: '',
-    description: '',
-    amount: '',
+    clientEmail: '',
+    items: [{ description: '', quantity: 1, price: 0 }],
+    total: 0,
     date: '',
     dueDate: '',
+    notes: '',
   });
 
   const [isListening, setIsListening] = useState(false);
@@ -87,12 +97,20 @@ export default function NewInvoicePage() {
       return dateStr; // fallback to original string
     };
 
+    const newItem = {
+      description: descriptionMatch ? descriptionMatch[1].trim() : '',
+      quantity: 1,
+      price: amountMatch ? parseFloat(amountMatch[1]) : 0,
+    };
+
     setParsedInvoice({
       clientName: clientMatch ? clientMatch[1].trim() : '',
-      description: descriptionMatch ? descriptionMatch[1].trim() : '',
-      amount: amountMatch ? amountMatch[1] : '',
+      clientEmail: '',
+      items: [newItem],
+      total: newItem.price,
       date: parseDate(dateMatch ? dateMatch[1].trim() : ''),
       dueDate: parseDate(dueDateMatch ? dueDateMatch[1].trim() : ''),
+      notes: '',
     });
   };
 
@@ -137,11 +155,35 @@ export default function NewInvoicePage() {
     }
   };
 
+  const addItem = () => {
+    setParsedInvoice(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, price: 0 }]
+    }));
+  };
+
+  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
+    setParsedInvoice(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = { ...newItems[index], [field]: value };
+      const total = newItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      return { ...prev, items: newItems, total };
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setParsedInvoice(prev => {
+      const newItems = prev.items.filter((_, i) => i !== index);
+      const total = newItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      return { ...prev, items: newItems, total };
+    });
+  };
+
   const handleSave = async () => {
     try {
       // Validate required fields
-      if (!parsedInvoice.clientName || !parsedInvoice.amount) {
-        alert('Please fill in at least client name and amount');
+      if (!parsedInvoice.clientName || parsedInvoice.items.length === 0) {
+        alert('Please fill in client name and at least one item');
         return;
       }
 
@@ -154,16 +196,13 @@ export default function NewInvoicePage() {
       // Prepare invoice data
       const invoiceData = {
         client_name: parsedInvoice.clientName,
-        client_email: '', // Can be added later
-        items: [{
-          description: parsedInvoice.description || 'Services',
-          quantity: 1,
-          price: parseFloat(parsedInvoice.amount),
-        }],
-        total: parseFloat(parsedInvoice.amount),
+        client_email: parsedInvoice.clientEmail,
+        items: parsedInvoice.items,
+        total: parsedInvoice.total,
         status: 'draft',
         created_at: serverTimestamp(),
         due_date: parsedInvoice.dueDate ? new Date(parsedInvoice.dueDate) : null,
+        notes: parsedInvoice.notes,
         user_id: userId,
       };
 
@@ -175,10 +214,12 @@ export default function NewInvoicePage() {
       // Reset form
       setParsedInvoice({
         clientName: '',
-        description: '',
-        amount: '',
+        clientEmail: '',
+        items: [{ description: '', quantity: 1, price: 0 }],
+        total: 0,
         date: '',
         dueDate: '',
+        notes: '',
       });
       resetTranscript();
     } catch (error) {
@@ -245,79 +286,163 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold mb-4">Invoice Details</h2>
-          <form className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Client Name
-              </label>
-              <input
-                type="text"
-                value={parsedInvoice.clientName}
-                onChange={(e) => setParsedInvoice(prev => ({ ...prev, clientName: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Enter client name"
-              />
-            </div>
+          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+            <FileText className="text-primary" size={24} />
+            Invoice Details
+          </h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={parsedInvoice.description}
-                onChange={(e) => setParsedInvoice(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                rows={3}
-                placeholder="Enter invoice description"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form className="space-y-6">
+            {/* Client Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Amount (R)
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <User size={16} />
+                  Client Name *
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
-                  value={parsedInvoice.amount}
-                  onChange={(e) => setParsedInvoice(prev => ({ ...prev, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="0.00"
+                  type="text"
+                  value={parsedInvoice.clientName}
+                  onChange={(e) => setParsedInvoice(prev => ({ ...prev, clientName: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  placeholder="Enter client name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <span className="text-gray-400">@</span>
+                  Client Email
+                </label>
+                <input
+                  type="email"
+                  value={parsedInvoice.clientEmail}
+                  onChange={(e) => setParsedInvoice(prev => ({ ...prev, clientEmail: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  placeholder="client@example.com"
+                />
+              </div>
+            </div>
+
+            {/* Invoice Items */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <DollarSign size={16} />
+                  Invoice Items *
+                </label>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Plus size={16} />
+                  Add Item
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {parsedInvoice.items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Item description"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-center"
+                      />
+                    </div>
+                    <div className="w-28">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={item.price}
+                        onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-right"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="w-20 text-right font-semibold text-gray-900">
+                      R{(item.quantity * item.price).toFixed(2)}
+                    </div>
+                    {parsedInvoice.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-4 bg-primary/5 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">Total Amount:</span>
+                  <span className="text-2xl font-bold text-primary">R{parsedInvoice.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar size={16} />
+                  Invoice Date
                 </label>
                 <input
                   type="date"
                   value={parsedInvoice.date}
                   onChange={(e) => setParsedInvoice(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar size={16} />
                   Due Date
                 </label>
                 <input
                   type="date"
                   value={parsedInvoice.dueDate}
                   onChange={(e) => setParsedInvoice(prev => ({ ...prev, dueDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end">
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notes
+              </label>
+              <textarea
+                value={parsedInvoice.notes}
+                onChange={(e) => setParsedInvoice(prev => ({ ...prev, notes: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                rows={3}
+                placeholder="Additional notes or payment terms..."
+              />
+            </div>
+
+            <div className="flex justify-end pt-4">
               <button
                 type="button"
                 onClick={handleSave}
-                className="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-2"
+                className="bg-gradient-to-r from-primary to-primary-dark text-white px-8 py-3 rounded-lg hover:from-primary-dark hover:to-primary transition-all shadow-lg flex items-center gap-2 font-semibold"
               >
                 <Save size={20} />
                 Save Invoice

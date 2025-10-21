@@ -20,10 +20,11 @@ interface InvoiceData {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const invoiceId = params.id;
+    const invoiceId = id;
 
     // Fetch invoice from Firestore
     const invoiceRef = doc(db, 'invoices', invoiceId);
