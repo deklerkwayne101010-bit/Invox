@@ -223,7 +223,7 @@ export default function ReferralsPage() {
             </button>
           </div>
           <p className="text-gray-600">
-            Share this code with friends. When they sign up and become active users, you'll both earn $10 in credits!
+            Share this code with friends. When they sign up and become active users, you&apos;ll both earn $10 in credits!
           </p>
         </div>
 
