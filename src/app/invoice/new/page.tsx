@@ -272,7 +272,7 @@ export default function NewInvoicePage() {
                 {isListening ? 'Listening...' : 'Click to start recording'}
               </p>
               <p className="text-sm text-gray-600">
-                Say something like: "Create invoice for John Doe for web development services, amount 1500 dollars, due date next month"
+                Say something like: &quot;Create invoice for John Doe for web development services, amount 1500 dollars, due date next month&quot;
               </p>
             </div>
           </div>
