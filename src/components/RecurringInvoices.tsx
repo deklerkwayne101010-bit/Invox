@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Plus, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, Clock } from 'lucide-react';
 
 interface RecurringInvoice {
   id: string;
@@ -19,10 +19,16 @@ export default function RecurringInvoices() {
   const [recurringInvoices, setRecurringInvoices] = useState<RecurringInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    templateId: string;
+    clientId: string;
+    frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+    startDate: string;
+    endDate: string;
+  }>({
     templateId: '',
     clientId: '',
-    frequency: 'monthly' as const,
+    frequency: 'monthly',
     startDate: '',
     endDate: '',
   });
@@ -147,7 +153,7 @@ export default function RecurringInvoices() {
               </label>
               <select
                 value={formData.frequency}
-                onChange={(e) => setFormData({ ...formData, frequency: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, frequency: e.target.value as 'weekly' | 'monthly' | 'quarterly' | 'yearly' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="weekly">Weekly</option>

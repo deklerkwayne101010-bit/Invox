@@ -26,7 +26,7 @@ export async function sendEmail(data: EmailData) {
   }
 }
 
-export function generateInvoiceEmail(invoice: any, pdfUrl?: string): EmailData {
+export function generateInvoiceEmail(invoice: { id: string; client_name: string; client_email: string; total: number; due_date: string; business_name?: string }, pdfUrl?: string): EmailData {
   const subject = `Invoice #${invoice.id} from ${invoice.business_name || 'Invox'}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -47,7 +47,7 @@ export function generateInvoiceEmail(invoice: any, pdfUrl?: string): EmailData {
   };
 }
 
-export function generateReminderEmail(invoice: any, daysOverdue: number): EmailData {
+export function generateReminderEmail(invoice: { id: string; client_name: string; client_email: string; total: number; due_date: string; business_name?: string }, daysOverdue: number): EmailData {
   const subject = `Payment Reminder: Invoice #${invoice.id} - ${daysOverdue} days overdue`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

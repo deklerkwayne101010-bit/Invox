@@ -37,7 +37,6 @@ export async function getExchangeRates(baseCurrency = 'USD'): Promise<ExchangeRa
   }
 
   try {
-    const apiKey = process.env.EXCHANGE_RATE_API_KEY;
     const url = `https://api.exchangerate-api.com/v4/latest/${baseCurrency}`;
 
     const response = await axios.get(url);
