@@ -20,8 +20,8 @@ interface Invoice {
   items: InvoiceItem[];
   total: number;
   status: string;
-  created_at: any;
-  due_date: any;
+  created_at: Date | string;
+  due_date: Date | string;
 }
 
 export default function InvoiceDetailPage() {
@@ -51,7 +51,7 @@ export default function InvoiceDetailPage() {
             throw new Error('Failed to fetch invoices');
           }
           const data = await response.json();
-          const mockInvoice = data.invoices.find((inv: any) => inv.id === invoiceId);
+          const mockInvoice = data.invoices.find((inv: Record<string, unknown>) => inv.id === invoiceId);
           if (mockInvoice) {
             setInvoice({
               id: mockInvoice.id,
@@ -87,7 +87,7 @@ export default function InvoiceDetailPage() {
   const handleShareWhatsApp = () => {
     if (!invoice) return;
 
-    const message = `Invoice from Your Company Name\n\nInvoice ID: ${invoice.id}\nClient: ${invoice.client_name}\nTotal: R${invoice.total.toFixed(2)}\nDue Date: ${invoice.due_date?.toDate()?.toLocaleDateString() || 'N/A'}\n\nPlease find the attached invoice.`;
+    const message = `Invoice from Your Company Name\n\nInvoice ID: ${invoice.id}\nClient: ${invoice.client_name}\nTotal: R${invoice.total.toFixed(2)}\nDue Date: ${typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date ? (invoice.due_date as any).toDate().toLocaleDateString() : 'N/A'}\n\nPlease find the attached invoice.`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -96,7 +96,7 @@ export default function InvoiceDetailPage() {
     if (!invoice) return;
 
     const subject = `Invoice ${invoice.id} from Your Company Name`;
-    const body = `Dear ${invoice.client_name},\n\nPlease find attached invoice ${invoice.id} for R${invoice.total.toFixed(2)}.\n\nDue Date: ${invoice.due_date?.toDate()?.toLocaleDateString() || 'N/A'}\n\nThank you for your business!\n\nBest regards,\nYour Company Name`;
+    const body = `Dear ${invoice.client_name},\n\nPlease find attached invoice ${invoice.id} for R${invoice.total.toFixed(2)}.\n\nDue Date: ${typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date ? (invoice.due_date as any).toDate().toLocaleDateString() : 'N/A'}\n\nThank you for your business!\n\nBest regards,\nYour Company Name`;
 
     const mailtoUrl = `mailto:${invoice.client_email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoUrl, '_blank');
@@ -177,10 +177,10 @@ export default function InvoiceDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <p className="text-gray-600">Invoice Date: {invoice.created_at?.toDate()?.toLocaleDateString() || 'N/A'}</p>
+              <p className="text-gray-600">Invoice Date: {typeof invoice.created_at === 'object' && 'toDate' in invoice.created_at ? (invoice.created_at as any).toDate().toLocaleDateString() : 'N/A'}</p>
             </div>
             <div>
-              <p className="text-gray-600">Due Date: {invoice.due_date?.toDate()?.toLocaleDateString() || 'N/A'}</p>
+              <p className="text-gray-600">Due Date: {typeof invoice.due_date === 'object' && 'toDate' in invoice.due_date ? (invoice.due_date as any).toDate().toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
 
