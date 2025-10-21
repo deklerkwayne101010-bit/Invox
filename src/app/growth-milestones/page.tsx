@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, TrendingUp, Users, FileText, Zap, Calendar, CheckCircle, Circle, ArrowLeft } from 'lucide-react';
+import { TrendingUp, Users, FileText, Zap, Calendar, CheckCircle, Circle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface GrowthMilestone {
@@ -302,13 +302,13 @@ export default function GrowthMilestonesPage() {
           <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-8 text-white">
             <h2 className="text-2xl font-bold mb-6">🎉 Recent Achievements</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {stats.recentAchievements.map((achievement: any, index: number) => (
+              {stats.recentAchievements.map((achievement: Record<string, unknown>, index: number) => (
                 <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <div className="text-2xl mb-2">{achievement.icon}</div>
-                  <h3 className="font-semibold mb-1">{achievement.title}</h3>
-                  <p className="text-sm opacity-90 mb-2">{achievement.description}</p>
+                  <div className="text-2xl mb-2">{achievement.icon as string}</div>
+                  <h3 className="font-semibold mb-1">{achievement.title as string}</h3>
+                  <p className="text-sm opacity-90 mb-2">{achievement.description as string}</p>
                   <div className="text-xs opacity-75">
-                    Achieved {new Date(achievement.achievedAt).toLocaleDateString()}
+                    Achieved {new Date(achievement.achievedAt as string | number | Date).toLocaleDateString()}
                   </div>
                 </div>
               ))}
